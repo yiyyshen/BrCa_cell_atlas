@@ -27,7 +27,7 @@ for(i in 1:ncol(sigdat)){ # for each subtype
   # sigdat[i,!is.na(sigdat[i,])]->module #all rows in a sigdat column (all signature genes in a subtype)
   # row <- as.character(unlist(module))
   row <- as.character(sigdat[,i]) #create a variable called row, which contains all genes of a subtype as characters, like row = "gene a" "gene b" "gene c"...
-  row<-unique(row[row != ""]) #make sure each gene only appears once in each subtype???
+  row<-unique(row[row != ""]) #make sure no empty row and each gene only appears once in each subtype???
   genes<-which(rownames(tocalc) %in% row) #create a new variable called "genes", which includes only the POSITION of the genes that appear in the signature gene list (like 1, 2, 4, ...) 
   
   temp<-apply(tocalc[genes,],2,function(x){mean(as.numeric(x),na.rm=TRUE)}) #Calculate the mean (scaled) gene expression of all signature genes for each cell
