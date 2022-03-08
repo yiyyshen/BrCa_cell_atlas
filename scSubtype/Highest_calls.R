@@ -13,32 +13,32 @@ temp_allgenes <- unique(temp_allgenes[!temp_allgenes == ""]) #remove the duplica
 
 #Read in the single cell RDS object as 'Mydata'
 # Mydata <- readRDS("path_to_seurat_object.Rdata")
-Mydata <- ScaleData(Mydata, features=temp_allgenes) #mydata is scaled and centered based on the genes from the signature gene list???
-tocalc<-as.data.frame(Mydata@assays$RNA@scale.data) #extract scaled data???
+Mydata <- ScaleData(Mydata, features=temp_allgenes) # The feature genes in Mydata are scaled and centered with mean of 0
+tocalc<-as.data.frame(Mydata@assays$RNA@scale.data) # extract scaled data as dataframe named "tocalc"
 
 #calculate mean scsubtype scores
 outdat <- matrix(0,
                  nrow=ncol(sigdat), # row is subtype
-                 ncol=ncol(tocalc), # column is each individual cell??
+                 ncol=ncol(tocalc), # column is each individual cell? so row is gene
                  dimnames=list(colnames(sigdat),
                                colnames(tocalc)))
 for(i in 1:ncol(sigdat)){ # for each subtype
   
-  # sigdat[i,!is.na(sigdat[i,])]->module #all rows in a column (all signature genes in a subtype)
+  # sigdat[i,!is.na(sigdat[i,])]->module #all rows in a sigdat column (all signature genes in a subtype)
   # row <- as.character(unlist(module))
-  row <- as.character(sigdat[,i])
-  row<-unique(row[row != ""])
-  genes<-which(rownames(tocalc) %in% row)
+  row <- as.character(sigdat[,i]) #create a variable called row, which contains all genes of a subtype as characters, like row = "gene a" "gene b" "gene c"...
+  row<-unique(row[row != ""]) #make sure each gene only appears once in each subtype???
+  genes<-which(rownames(tocalc) %in% row) #create a new variable called "genes", which includes only the POSITION of the genes that appear in the signature gene list (like 1, 2, 4, ...) 
   
-  temp<-apply(tocalc[genes,],2,function(x){mean(as.numeric(x),na.rm=TRUE)}) #Calculate the mean of signature gene counts
+  temp<-apply(tocalc[genes,],2,function(x){mean(as.numeric(x),na.rm=TRUE)}) #Calculate the mean (scaled) gene expression of all signature genes for each cell
   
-  outdat[i,]<-as.numeric(temp)
+  outdat[i,]<-as.numeric(temp) #add the mean expression as the subtype score for each cell
 
 }
 
-final<-outdat[which(rowSums(outdat,na.rm=TRUE)!=0),]
-final<-as.data.frame(final)
-is.num <- sapply(final, is.numeric);final[is.num] <- lapply(final[is.num], round, 4)
+final<-outdat[which(rowSums(outdat,na.rm=TRUE)!=0),] #create a variable called "final" and remove the rows with sum=0 from outdat (remove the subtype with 0 total gene expression of all cells)
+final<-as.data.frame(final) #make final into a dataframe
+is.num <- sapply(final, is.numeric);final[is.num] <- lapply(final[is.num], round, 4) #???
 finalm<-as.matrix(final)
 
 ##Scaling scores function before calling the highest Call
