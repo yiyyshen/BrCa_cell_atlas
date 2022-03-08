@@ -4,33 +4,33 @@
 library(Seurat)
 
 # read in scsubtype gene signatures
-sigdat <- read.csv("NatGen_Supplementary_table_S4.csv")
-temp_allgenes <- c(as.vector(sigdat[,"Basal_SC"]),
+sigdat <- read.csv("NatGen_Supplementary_table_S4.csv") #define sigdat as the gene list table
+temp_allgenes <- c(as.vector(sigdat[,"Basal_SC"]), #temp_allgenes is a vector that contains 4 vectors of subtyping genes
                    as.vector(sigdat[,"Her2E_SC"]),
                    as.vector(sigdat[,"LumA_SC"]),
                    as.vector(sigdat[,"LumB_SC"]))
-temp_allgenes <- unique(temp_allgenes[!temp_allgenes == ""])
+temp_allgenes <- unique(temp_allgenes[!temp_allgenes == ""]) #remove the duplicated genes 
 
 #Read in the single cell RDS object as 'Mydata'
 # Mydata <- readRDS("path_to_seurat_object.Rdata")
-Mydata <- ScaleData(Mydata, features=temp_allgenes)
-tocalc<-as.data.frame(Mydata@assays$RNA@scale.data)
+Mydata <- ScaleData(Mydata, features=temp_allgenes) #mydata is scaled and centered based on the genes from the signature gene list???
+tocalc<-as.data.frame(Mydata@assays$RNA@scale.data) #extract scaled data???
 
 #calculate mean scsubtype scores
 outdat <- matrix(0,
-                 nrow=ncol(sigdat),
-                 ncol=ncol(tocalc),
+                 nrow=ncol(sigdat), # row is subtype
+                 ncol=ncol(tocalc), # column is each individual cell??
                  dimnames=list(colnames(sigdat),
                                colnames(tocalc)))
-for(i in 1:ncol(sigdat)){
+for(i in 1:ncol(sigdat)){ # for each subtype
   
-  # sigdat[i,!is.na(sigdat[i,])]->module
+  # sigdat[i,!is.na(sigdat[i,])]->module #all rows in a column (all signature genes in a subtype)
   # row <- as.character(unlist(module))
   row <- as.character(sigdat[,i])
   row<-unique(row[row != ""])
   genes<-which(rownames(tocalc) %in% row)
   
-  temp<-apply(tocalc[genes,],2,function(x){mean(as.numeric(x),na.rm=TRUE)})
+  temp<-apply(tocalc[genes,],2,function(x){mean(as.numeric(x),na.rm=TRUE)}) #Calculate the mean of signature gene counts
   
   outdat[i,]<-as.numeric(temp)
 
