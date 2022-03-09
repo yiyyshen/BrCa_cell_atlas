@@ -38,18 +38,18 @@ for(i in 1:ncol(sigdat)){ # for each subtype
 
 final<-outdat[which(rowSums(outdat,na.rm=TRUE)!=0),] #create a variable called "final" and remove the rows with sum=0 from outdat (remove the subtype with 0 total gene expression of all cells)
 final<-as.data.frame(final) #make final into a dataframe
-is.num <- sapply(final, is.numeric);final[is.num] <- lapply(final[is.num], round, 4) #???
-finalm<-as.matrix(final)
+is.num <- sapply(final, is.numeric);final[is.num] <- lapply(final[is.num], round, 4) # Round final up? what is the 4 doing here??
+finalm<-as.matrix(final) #make final into a matrix
 
 ##Scaling scores function before calling the highest Call
-center_sweep <- function(x, row.w = rep(1, nrow(x))/nrow(x)) {
-  get_average <- function(v) sum(v * row.w)/sum(row.w)
-  average <- apply(x, 2, get_average)
-  sweep(x, 2, average)
-}
+center_sweep <- function(x, row.w = rep(1, nrow(x))/nrow(x)) { #define a function with 2 inputs: data x, and row.w is the default input, and repeat 1 nrow times and divide each by nrow (if there are 4 rows, generate  1 1 1 1, divide each by 4, generate 1/4, 1/4, 1/4, 1/4)
+  get_average <- function(v) sum(v * row.w)/sum(row.w) # v is each column in x, to calculate the avergae in each column
+  average <- apply(x, 2, get_average) # calculate the average gene expression for each cell (average of all the rows within the specified column) 
+  sweep(x, 2, average) # substracting the mean of the column in every row of the column
+} #normalizing the subtype score in each row
 
-##Obtaining the highest call
-finalmt<-as.data.frame(t(finalm))
+##Obtaining the highest call 
+finalmt<-as.data.frame(t(finalm)) #pick highest number in each column
 finalm.sweep.t<-center_sweep(finalmt)
 Finalnames<-colnames(finalm.sweep.t)[max.col(finalm.sweep.t,ties.method="first")]
 finalm.sweep.t$SCSubtypeCall <- Finalnames
